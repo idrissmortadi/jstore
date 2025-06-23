@@ -11,7 +11,7 @@ import (
 )
 
 func TestJStore_Execute_Set(t *testing.T) {
-	js := NewJStore()
+	js := NewJStore(true)
 
 	cmd := Command{
 		Op:    "set",
@@ -32,7 +32,7 @@ func TestJStore_Execute_Set(t *testing.T) {
 }
 
 func TestJStore_Execute_Delete(t *testing.T) {
-	js := NewJStore()
+	js := NewJStore(true)
 
 	cmd := Command{
 		Op:    "set",
@@ -69,7 +69,7 @@ func TestJStore_Execute_Delete(t *testing.T) {
 }
 
 func TestJStore_Execute_Get_ExistingKey(t *testing.T) {
-	js := NewJStore()
+	js := NewJStore(true)
 	js.Data["existing_key"] = StoreItem{
 		Value:     "existing_value",
 		ExpiresAt: time.Now().Add(1 * time.Hour).Unix(),
@@ -92,7 +92,7 @@ func TestJStore_Execute_Get_ExistingKey(t *testing.T) {
 }
 
 func TestJStore_Execute_Get_NonExistingKey(t *testing.T) {
-	js := NewJStore()
+	js := NewJStore(true)
 
 	cmd := Command{
 		Op:  "get",
@@ -111,7 +111,7 @@ func TestJStore_Execute_Get_NonExistingKey(t *testing.T) {
 }
 
 func TestJStore_Execute_UnknownOperation(t *testing.T) {
-	js := NewJStore()
+	js := NewJStore(true)
 
 	cmd := Command{
 		Op:  "move",
@@ -130,7 +130,7 @@ func TestJStore_Execute_UnknownOperation(t *testing.T) {
 }
 
 func TestJStore_Execute_CaseInsensitive(t *testing.T) {
-	js := NewJStore()
+	js := NewJStore(true)
 
 	testCases := []string{"SET", "Set", "sEt", "GET", "Get", "gEt"}
 
@@ -154,7 +154,7 @@ func TestJStore_Execute_CaseInsensitive(t *testing.T) {
 }
 
 func TestJStore_ConcurrentAccess(t *testing.T) {
-	js := NewJStore()
+	js := NewJStore(true)
 	var wg sync.WaitGroup
 
 	// Test concurrent writes
@@ -196,7 +196,7 @@ func TestJStore_ConcurrentAccess(t *testing.T) {
 }
 
 func TestJStore_Execute_SetWithNegativeTTL(t *testing.T) {
-	js := NewJStore()
+	js := NewJStore(true)
 	cmd := Command{
 		Op:    "set",
 		Key:   "test_key",
@@ -226,9 +226,27 @@ func TestBackgroundCleanup(t *testing.T) {
 	}
 }
 
+func TestJStore_ttl_disabled(t *testing.T) {
+	js := NewJStore(false)
+	cmd := Command{
+		Op:    "set",
+		Key:   "test_key",
+		Value: "test_value",
+		TTL:   1, // Short TTL, but TTL is disabled
+	}
+	js.Execute(cmd)
+	time.Sleep(2 * time.Second) // Wait longer than TTL
+	js.mu.RLock()
+	_, exists := js.Data["test_key"]
+	js.mu.RUnlock()
+	if !exists {
+		t.Errorf("Expected key 'test_key' to persist when TTL is disabled, but it was removed")
+	}
+}
+
 func TestJStore_Integration(t *testing.T) {
 	// Start server in a goroutine
-	js := NewJStore()
+	js := NewJStore(true)
 	addr := ":0" // Use any available port
 
 	listener, err := net.Listen("tcp", addr)
@@ -310,7 +328,7 @@ func TestJStore_Integration(t *testing.T) {
 }
 
 func TestJStore_InvalidJSON(t *testing.T) {
-	js := NewJStore()
+	js := NewJStore(true)
 
 	listener, err := net.Listen("tcp", ":0")
 	if err != nil {
@@ -362,7 +380,7 @@ func TestJStore_InvalidJSON(t *testing.T) {
 }
 
 func TestNewJStore(t *testing.T) {
-	js := NewJStore()
+	js := NewJStore(true)
 
 	if js == nil {
 		t.Fatal("NewJStore returned nil")

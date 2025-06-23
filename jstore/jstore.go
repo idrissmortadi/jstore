@@ -154,11 +154,15 @@ func (js *JStore) backgroundCleanup(cleanupInterval time.Duration) {
 	}
 }
 
-func NewJStore() *JStore {
+func NewJStore(ttlEnabled bool) *JStore {
 	js := &JStore{
 		Data: make(map[string]StoreItem),
 		mu:   sync.RWMutex{},
 	}
-	go js.backgroundCleanup(DEFAULT_CLEANUP_INTERVAL)
+	if ttlEnabled {
+		go js.backgroundCleanup(DEFAULT_CLEANUP_INTERVAL)
+	} else {
+		log.Println("TTL is disabled, no background cleanup will be performed.")
+	}
 	return js
 }
