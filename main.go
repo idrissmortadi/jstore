@@ -1,7 +1,7 @@
 package main
 
 import (
-	js "github.com/idrissmortadi/small_go_projects/jstore/jstore"
+	js "github.com/idrissmortadi/jstore/jstore"
 )
 
 func main() {
