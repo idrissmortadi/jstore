@@ -1,6 +1,7 @@
 # JStore
 
-A simple, lightweight TCP-based key-value store written in Go with JSON command protocol and TTL support.
+A simple, lightweight TCP-based key-value store written in Go with
+JSON command protocol and TTL support.
 
 ## Features
 
@@ -170,3 +171,8 @@ func main() {
     }
 }
 ```
+
+## To do
+
+- [ ] Add persistent storage (e.g., file-based or database)
+- [ ] Add constants for error messages
